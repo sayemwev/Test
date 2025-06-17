@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ওয়েব টু APK জেনারেটর - আব্দুল হালিম সায়েম</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #007bff; --secondary-color: #6c757d;
+            --bg-dark: #343a40; --bg-light: #f8f9fa;
+            --text-dark: #212529; --text-light: #ffffff;
+            --border-color: #dee2e6; --font-main: 'Hind Siliguri', sans-serif;
+            --radius: 8px; --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-main); background-color: var(--bg-light); color: var(--text-dark); line-height: 1.7; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 25px; }
+        header { background: var(--bg-dark); color: var(--text-light); text-align: center; padding: 25px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: var(--shadow); }
+        header h1 { font-size: 2.8em; margin-bottom: 10px; }
+        
+        .main-content { background: var(--text-light); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .form-section { margin-bottom: 25px; }
+        .form-section label { display: block; font-size: 1.2em; font-weight: 600; margin-bottom: 10px; }
+        .form-section input[type="text"], .form-section textarea {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius);
+            font-size: 1em; font-family: 'Courier New', monospace;
+        }
+        .form-section textarea { height: 250px; resize: vertical; }
+        
+        .upload-section { display: flex; align-items: center; gap: 20px; }
+        #appIconPreview { width: 72px; height: 72px; border-radius: 12px; border: 2px dashed var(--border-color); object-fit: cover; }
+        
+        .btn {
+            display: inline-block; width: 100%; padding: 15px 20px; font-size: 1.3em;
+            font-weight: 700; font-family: var(--font-main); border: none;
+            border-radius: var(--radius); cursor: pointer; transition: all 0.3s ease;
+            background-color: var(--primary-color); color: var(--text-light);
+        }
+        .btn:hover { background-color: #0056b3; transform: translateY(-3px); }
+        .btn:disabled { background-color: var(--secondary-color); cursor: not-allowed; }
+
+        #status { margin-top: 20px; text-align: center; font-size: 1.1em; font-weight: 600; display: none; }
+        #downloadLinkContainer { text-align: center; margin-top: 20px; display: none; }
+        #downloadLink {
+            display: inline-block; background-color: #28a745; color: white; padding: 15px 30px;
+            text-decoration: none; border-radius: 50px; font-size: 1.4em; font-weight: bold;
+        }
+        
+        .footer { text-align: center; margin-top: 30px; padding: 20px; color: #6c757d; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>ওয়েব কোড থেকে APK তৈরি করুন</h1>
+        </header>
+
+        <div class="main-content">
+            <form id="apkForm">
+                <div class="form-section">
+                    <label for="appName">অ্যাপের নাম (ইংরেজিতে)</label>
+                    <input type="text" id="appName" placeholder="e.g., My Awesome App" required>
+                </div>
+
+                <div class="form-section">
+                    <label>অ্যাপের লোগো (PNG, 512x512px)</label>
+                    <div class="upload-section">
+                         <img id="appIconPreview" src="https://via.placeholder.com/72" alt="App Icon Preview">
+                         <input type="file" id="appIcon" accept="image/png" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label for="htmlCode">HTML, CSS, এবং JavaScript কোড (একটি ফাইলে)</label>
+                    <textarea id="fullCode" placeholder="আপনার সম্পূর্ণ HTML ফাইলটি এখানে পেস্ট করুন (CSS ও JS সহ)..." required></textarea>
+                </div>
+
+                <button type="submit" id="generateApkBtn" class="btn">APK ফাইল তৈরি করুন</button>
+            </form>
+
+            <div id="status"></div>
+            <div id="downloadLinkContainer">
+                <a id="downloadLink" href="#" download>অ্যাপ ডাউনলোড করুন</a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>© আব্দুল হালিম সায়েম</p>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const apkForm = document.getElementById('apkForm');
+    const generateBtn = document.getElementById('generateApkBtn');
+    const statusDiv = document.getElementById('status');
+    const downloadLinkContainer = document.getElementById('downloadLinkContainer');
+    const downloadLink = document.getElementById('downloadLink');
+    const appIconInput = document.getElementById('appIcon');
+    const appIconPreview = document.getElementById('appIconPreview');
+
+    // Show selected icon preview
+    appIconInput.addEventListener('change', () => {
+        const file = appIconInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                appIconPreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    apkForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const appName = document.getElementById('appName').value;
+        const fullCode = document.getElementById('fullCode').value;
+        const appIcon = appIconInput.files[0];
+
+        if (!appName || !fullCode || !appIcon) {
+            alert('অনুগ্রহ করে সকল তথ্য পূরণ করুন।');
+            return;
+        }
+
+        // --- Prepare data for server ---
+        const formData = new FormData();
+        formData.append('appName', appName);
+        formData.append('fullCode', fullCode);
+        formData.append('appIcon', appIcon);
+
+        // --- Show status and disable button ---
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = 'আপনার অ্যাপ তৈরি হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন। এটি কয়েক মিনিট সময় নিতে পারে।';
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'প্রসেসিং...';
+        downloadLinkContainer.style.display = 'none';
+
+        try {
+            // --- Send data to the server ---
+            // **গুরুত্বপূর্ণ:** এখানে আপনার সার্ভারের ঠিকানা দিতে হবে।
+            // যেমন: const response = await fetch('http://your-server-ip:3000/generate-apk', {
+            const response = await fetch('/generate-apk', { // We use a relative path for simplicity
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                statusDiv.textContent = 'আপনার অ্যাপ সফলভাবে তৈরি হয়েছে!';
+                downloadLink.href = result.downloadUrl;
+                downloadLinkContainer.style.display = 'block';
+            } else {
+                throw new Error(result.message || 'সার্ভারে কোনো সমস্যা হয়েছে।');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            statusDiv.textContent = `ত্রুটি: ${error.message}. অনুগ্রহ করে আবার চেষ্টা করুন।`;
+        } finally {
+            // Re-enable button
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'APK ফাইল তৈরি করুন';
+        }
+    });
+});
+</script>
+
+</body>
+</html>
